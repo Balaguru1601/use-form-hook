@@ -1,7 +1,7 @@
 import { HTMLInputTypeAttribute, useId, useState } from "react";
 import { ValidationFunctionType } from "../Utilities/FormValidationFunctions";
 
-type ParameterType = {
+export interface ParameterType {
 	descriptors: {
 		type: HTMLInputTypeAttribute;
 		name: string;
@@ -10,38 +10,40 @@ type ParameterType = {
 	};
 	validationFunction: ValidationFunctionType;
 	updationFunction?: (value: string | number) => void;
-};
+}
 
-export type UseFormReturnType = {
+export interface UseFormReturnType {
 	fields: {
 		[fieldName: string]: {
-			id: string;
-			properties: {
-				name: string;
-				type: HTMLInputTypeAttribute;
+			readonly id: string;
+			readonly properties: {
+				readonly name: string;
+				readonly type: HTMLInputTypeAttribute;
 				value: string;
-				label: string;
-				onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-				onBlur: () => void;
-				required: boolean;
-				icon?:
+				readonly label: string;
+				readonly onChange: (
+					event: React.ChangeEvent<HTMLInputElement>
+				) => void;
+				readonly onBlur: () => void;
+				readonly required: boolean;
+				readonly icon?:
 					| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
 					| null;
 			};
-			validities: {
+			readonly validities: {
 				isInvalid: boolean;
 				isValid: boolean;
-				reset: () => void;
+				readonly reset: () => void;
 				message: string;
-				raiseError: () => void;
-				setInitialValue: (val: string) => void;
+				readonly raiseError: () => void;
+				readonly setInitialValue: (val: string) => void;
 			};
 		};
 	};
 	checkValidity: () => boolean;
 	raiseError: () => void;
 	errorMessage?: string;
-};
+}
 
 // export const useInput = (
 // 	descriptors: {

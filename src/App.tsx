@@ -1,10 +1,8 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 import { validateText } from "./Utilities/FormValidationFunctions";
 import useFrom, { UseFormReturnType } from "./Hooks/useForm";
-import CustomFormControl from "./Components/CustomFormControl";
+import CustomFormControl from "./Components/MUI/CustomFormControl";
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -16,14 +14,15 @@ function App() {
 				label: "test",
 				type: "text",
 				required: true,
+				icon: "AccountCircle",
 			},
 			validationFunction: validateText,
 		},
 		{
 			descriptors: {
-				name: "test2",
+				name: "passsword",
 				label: "test2",
-				type: "text",
+				type: "password",
 				required: true,
 			},
 			validationFunction: validateText,
@@ -34,6 +33,7 @@ function App() {
 				label: "test3",
 				type: "text",
 				required: false,
+				icon: "Email",
 			},
 			validationFunction: validateText,
 		},

@@ -12,7 +12,7 @@ import {
 	Button,
 	Typography,
 } from "@mui/material";
-import { UseFormReturnType } from "../Hooks/useForm";
+import { UseFormReturnType } from "../../Hooks/useForm";
 import { useState } from "react";
 
 const CustomFormControl = (props: {
@@ -25,13 +25,39 @@ const CustomFormControl = (props: {
 
 	const formFields = [];
 	const [error, setError] = useState<string>();
+	const [showPassword, setShowPassword] = useState(false);
+
+	const handleClickShowPassword = () => {
+		setShowPassword((prev) => !prev);
+	};
+
+	const handleMouseDownPassword = (
+		event: React.MouseEvent<HTMLButtonElement>
+	) => event.preventDefault();
 
 	for (const f in fields.fields) {
+		const field = fields.fields[f];
 		const icon:
 			| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
-			| null = fields.fields[f].properties.icon || null;
-		const InputIcon = icon ? Icon[icon] : null;
-		const field = fields.fields[f];
+			| null =
+			field.properties.type === "password"
+				? showPassword
+					? "VisibilityOff"
+					: "Visibility"
+				: fields.fields[f].properties.icon || null;
+		const InputIcon =
+			(icon || field.properties.type === "password") && Icon[icon!];
+
+		const IconBtnProps: IconButtonProps =
+			field.properties.type === "password"
+				? {
+						onClick: handleClickShowPassword,
+						onMouseDown: handleMouseDownPassword,
+						disabled: field.properties.value.length === 0,
+				  }
+				: { disabled: true };
+		console.log(field.properties.type === "password");
+
 		formFields.push(
 			<FormControl
 				className={classes.formControl}
@@ -49,13 +75,19 @@ const CustomFormControl = (props: {
 					endAdornment={
 						icon && (
 							<InputAdornment position="end">
-								<IconButton>
+								<IconButton {...IconBtnProps}>
 									{InputIcon && <InputIcon />}
 								</IconButton>
 							</InputAdornment>
 						)
 					}
-					type={field.properties.type}
+					type={
+						field.properties.type === "password"
+							? showPassword
+								? "text"
+								: "password"
+							: field.properties.type
+					}
 				/>
 				{field.validities.isInvalid && (
 					<FormHelperText id="component-error-text">
