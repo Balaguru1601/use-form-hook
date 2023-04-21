@@ -49,7 +49,8 @@ function App() {
 	]);
 
 	const formSubmitHandler = (f: UseFormReturnType) => {
-		console.log(f.fields);
+		// do the action for form submit
+		console.log(f);
 	};
 
 	return (

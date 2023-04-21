@@ -56,7 +56,6 @@ const CustomFormControl = (props: {
 						disabled: field.properties.value.length === 0,
 				  }
 				: { disabled: true };
-		console.log(field.properties.type === "password");
 
 		formFields.push(
 			<FormControl
@@ -101,7 +100,6 @@ const CustomFormControl = (props: {
 	const formSubmitHandler = () => {
 		if (!fields.checkValidity()) {
 			fields.raiseError();
-			setError(fields.errorMessage || "please fill details");
 		} else {
 			submitHandler(fields);
 		}
@@ -110,8 +108,11 @@ const CustomFormControl = (props: {
 	return (
 		<Container sx={{ p: 4, backgroundColor: "white" }}>
 			{...formFields}
-			{error && <Typography color={"salmon"}>{error}</Typography>}
+
+			<Typography color={"salmon"}>{fields.errorMessage}</Typography>
+
 			<Button onClick={formSubmitHandler}>Submit</Button>
+			<Button onClick={fields.resetForm}>Reset</Button>
 		</Container>
 	);
 };

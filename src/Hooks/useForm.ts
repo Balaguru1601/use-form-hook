@@ -43,6 +43,7 @@ export interface UseFormReturnType {
 	checkValidity: () => boolean;
 	raiseError: () => void;
 	errorMessage?: string;
+	resetForm: () => void;
 }
 
 // export const useInput = (
@@ -143,6 +144,7 @@ const useFrom = (
 	const formObject: UseFormReturnType = {
 		fields: {},
 		checkValidity: () => false,
+		resetForm: () => {},
 		raiseError: () => {},
 	};
 	const formFieldsArray: {
@@ -164,6 +166,7 @@ const useFrom = (
 			setInitialValue: (val: string) => void;
 		};
 	}[] = [];
+	const [error, setError] = useState<string>();
 	for (const field of FieldList) {
 		const { descriptors, validationFunction, updationFunction } = field;
 		const [enteredValue, setEnteredValue] = useState(
@@ -175,7 +178,9 @@ const useFrom = (
 		const { validity: valueIsValid, message } =
 			validationFunction(enteredValue);
 
-		const valueIsInvalid = inpWasTouched && !valueIsValid;
+		const valueIsInvalid = descriptors.required
+			? inpWasTouched && !valueIsValid
+			: enteredValue.length > 0 && !valueIsValid;
 
 		const updateValue = (event: React.ChangeEvent<HTMLInputElement>) => {
 			if (updationFunction) updationFunction(event.target.value);
@@ -242,6 +247,12 @@ const useFrom = (
 			},
 		});
 	}
+
+	formObject.resetForm = () => {
+		for (const f of formFieldsArray) f.validities.reset();
+		setError("");
+	};
+
 	/**
 	 * The function to check form validity
 	 * @returns validity : boolean
@@ -261,11 +272,14 @@ const useFrom = (
 			if (field.properties.required && field.validities.isInvalid)
 				field.validities.raiseError;
 		}
-		if (checkFormValidity() === false)
-			formObject.errorMessage = "Please fill all required fields!";
+		if (checkFormValidity() === false) {
+			setError("Please fill all required fields!");
+		}
 	};
+
 	formObject.checkValidity = checkFormValidity;
 	formObject.raiseError = raiseFormError;
+	formObject.errorMessage = error;
 	return formObject;
 };
 
