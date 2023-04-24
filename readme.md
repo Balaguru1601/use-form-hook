@@ -3,12 +3,12 @@
 ### Built in React.js using Vite
 
 This is an application demonstrating the use of a custom react hook for forms.
-The hook currently supports MUI form elemet. The accepted fromat is gven as CustomFormControl component.
+The hook currently supports MUI form elemet. The accepted format for a form field is given in CustomFormControl component.
 The hook is written in Typescript and currently supports all type of text, number and date input types.
 The parameters to be passed are a list of fields each consisting of a parameter of the following type :
 
 ```ts
-    type ParameterType = {
+type ParameterType = {
     	descriptors: {
     		type: HTMLInputTypeAttribute;
     		name: string;
