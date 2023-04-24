@@ -1,60 +1,83 @@
 import { useState } from "react";
 import "./App.css";
-import { validateText } from "./Utilities/FormValidationFunctions";
+import {
+	validateEmail,
+	validatePassword,
+	validateText,
+	validateUserName,
+} from "./Utilities/FormValidationFunctions";
 import useFrom, { UseFormReturnType } from "./Hooks/useForm";
 import CustomFormControl from "./Components/MUI/CustomFormControl";
+import axios from "axios";
+import { Typography } from "@mui/material";
+
+const serverUrl = import.meta.env.VITE_SERVER_URL;
 
 function App() {
-	const [count, setCount] = useState(0);
+	const [response, setResponse] = useState<string>();
 
 	const f = useFrom([
 		{
 			descriptors: {
-				name: "test",
-				label: "test",
+				name: "username",
+				label: "Enter username",
 				type: "text",
 				required: true,
 				icon: "AccountCircle",
 			},
-			validationFunction: validateText,
+			validationFunction: validateUserName,
 		},
 		{
 			descriptors: {
 				name: "passsword",
-				label: "test2",
+				label: "Enter password",
 				type: "password",
 				required: true,
 			},
-			validationFunction: validateText,
+			validationFunction: validatePassword,
 		},
 		{
 			descriptors: {
-				name: "test3",
-				label: "test3",
-				type: "text",
-				required: false,
-				icon: "Email",
-			},
-			validationFunction: validateText,
-		},
-		{
-			descriptors: {
-				name: "test4",
-				label: "test4",
+				name: "email",
+				label: "Enter email",
 				type: "text",
 				required: true,
+				icon: "Email",
+			},
+			validationFunction: validateEmail,
+		},
+		{
+			descriptors: {
+				name: "optional",
+				label: "Optional Field",
+				type: "text",
+				required: false,
 			},
 			validationFunction: validateText,
 		},
 	]);
 
-	const formSubmitHandler = (f: UseFormReturnType) => {
+	const formSubmitHandler = async (f: UseFormReturnType) => {
 		// do the action for form submit
-		console.log(f);
+		const response = await axios.post(serverUrl, f.getValues());
+		console.log(response.data);
+		setResponse("Data sent successfully!");
+		f.resetForm();
+		return;
 	};
 
 	return (
 		<div className="App">
+			{response && (
+				<Typography
+					variant="body2"
+					color="error"
+					bgcolor={"whitesmoke"}
+					my={2}
+				>
+					{response}
+				</Typography>
+			)}
 			<CustomFormControl fields={f} submitHandler={formSubmitHandler} />
 		</div>
 	);

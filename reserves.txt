@@ -1,0 +1,68 @@
+export const useInput = (
+	descriptors: {
+		type: HTMLInputTypeAttribute;
+		name: string;
+		label: string;
+		initialValue: string;
+	},
+	validationFunction: ValidationFunctionType,
+	updationFunction: (value: string | number) => void
+) => {
+	const [enteredValue, setEnteredValue] = useState(
+		descriptors.initialValue || ""
+	);
+	const [inpWasTouched, setInpwasTouched] = useState(false);
+
+	// const { validity: valueIsValid, message } =
+	// 	descriptors.type === "date" && descriptors.prevDate
+	// 		? validationFunction(enteredValue, moment(descriptors.prevDate))
+	// 		: validationFunction(enteredValue);
+
+	const { validity: valueIsValid, message } =
+		validationFunction(enteredValue);
+
+	const valueIsInvalid = inpWasTouched && !valueIsValid;
+
+	const updateValue = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (updationFunction) updationFunction(event.target.value);
+		setEnteredValue((prevState) => event.target.value);
+	};
+
+	const inputBlurHandler = () => {
+		setInpwasTouched((prevState) => true);
+	};
+
+	const resetInput = () => {
+		setEnteredValue((prevState) => "");
+		setInpwasTouched((prevState) => false);
+	};
+
+	const setInitialValue = (val: string) => {
+		setEnteredValue(val);
+	};
+
+	const raiseError = () => {
+		setEnteredValue((prev) => "");
+		setInpwasTouched((prev) => true);
+	};
+
+	return {
+		properties: {
+			name: descriptors.name,
+			type: descriptors.type,
+			id: descriptors.name,
+			value: enteredValue,
+			label: descriptors.label,
+			onChange: updateValue,
+			onBlur: inputBlurHandler,
+		},
+		validities: {
+			isInvalid: valueIsInvalid,
+			isValid: valueIsValid,
+			reset: resetInput,
+			message: message,
+			raiseError,
+			setInitialValue,
+		},
+	};
+};

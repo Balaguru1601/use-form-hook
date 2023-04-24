@@ -16,8 +16,7 @@ export const validatePassword: ValidationFunctionType = (password) => {
 		else if (!regExp.test(password))
 			return {
 				validity: false,
-				message:
-					"Should contain atleast a number and a special character",
+				message: "Should contain a number and special character",
 			};
 		return {
 			validity: true,
@@ -42,7 +41,7 @@ export const validateUserName: ValidationFunctionType = (value) => {
 		else if (!validity)
 			return {
 				validity: false,
-				message: "Should contain characters folllowed by numbers",
+				message: "Should contain characters followed by numbers",
 			};
 		return {
 			validity: true,

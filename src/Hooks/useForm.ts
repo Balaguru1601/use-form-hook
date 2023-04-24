@@ -12,108 +12,46 @@ export interface ParameterType {
 	updationFunction?: (value: string | number) => void;
 }
 
-export interface UseFormReturnType {
-	fields: {
-		[fieldName: string]: {
-			readonly id: string;
-			readonly properties: {
-				readonly name: string;
-				readonly type: HTMLInputTypeAttribute;
-				value: string;
-				readonly label: string;
-				readonly onChange: (
-					event: React.ChangeEvent<HTMLInputElement>
-				) => void;
-				readonly onBlur: () => void;
-				readonly required: boolean;
-				readonly icon?:
-					| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
-					| null;
-			};
-			readonly validities: {
-				isInvalid: boolean;
-				isValid: boolean;
-				readonly reset: () => void;
-				message: string;
-				readonly raiseError: () => void;
-				readonly setInitialValue: (val: string) => void;
-			};
+export interface getValueType {
+	[name: string]: string | number | boolean;
+}
+
+interface fieldType {
+	[fieldName: string]: {
+		readonly id: string;
+		readonly properties: {
+			readonly name: string;
+			readonly type: HTMLInputTypeAttribute;
+			value: string;
+			readonly label: string;
+			readonly onChange: (
+				event: React.ChangeEvent<HTMLInputElement>
+			) => void;
+			readonly onBlur: () => void;
+			readonly required: boolean;
+			readonly icon?:
+				| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
+				| null;
+		};
+		readonly validities: {
+			isInvalid: boolean;
+			isValid: boolean;
+			readonly reset: () => void;
+			message: string;
+			readonly raiseError: () => void;
+			readonly setInitialValue: (val: string) => void;
 		};
 	};
+}
+
+export interface UseFormReturnType {
+	fields: fieldType;
 	checkValidity: () => boolean;
 	raiseError: () => void;
 	errorMessage?: string;
 	resetForm: () => void;
+	getValues: () => getValueType | void;
 }
-
-// export const useInput = (
-// 	descriptors: {
-// 		type: HTMLInputTypeAttribute;
-// 		name: string;
-// 		label: string;
-// 		initialValue: string;
-// 	},
-// 	validationFunction: ValidationFunctionType,
-// 	updationFunction: (value: string | number) => void
-// ) => {
-// 	const [enteredValue, setEnteredValue] = useState(
-// 		descriptors.initialValue || ""
-// 	);
-// 	const [inpWasTouched, setInpwasTouched] = useState(false);
-
-// 	// const { validity: valueIsValid, message } =
-// 	// 	descriptors.type === "date" && descriptors.prevDate
-// 	// 		? validationFunction(enteredValue, moment(descriptors.prevDate))
-// 	// 		: validationFunction(enteredValue);
-
-// 	const { validity: valueIsValid, message } =
-// 		validationFunction(enteredValue);
-
-// 	const valueIsInvalid = inpWasTouched && !valueIsValid;
-
-// 	const updateValue = (event: React.ChangeEvent<HTMLInputElement>) => {
-// 		if (updationFunction) updationFunction(event.target.value);
-// 		setEnteredValue((prevState) => event.target.value);
-// 	};
-
-// 	const inputBlurHandler = () => {
-// 		setInpwasTouched((prevState) => true);
-// 	};
-
-// 	const resetInput = () => {
-// 		setEnteredValue((prevState) => "");
-// 		setInpwasTouched((prevState) => false);
-// 	};
-
-// 	const setInitialValue = (val: string) => {
-// 		setEnteredValue(val);
-// 	};
-
-// 	const raiseError = () => {
-// 		setEnteredValue((prev) => "");
-// 		setInpwasTouched((prev) => true);
-// 	};
-
-// 	return {
-// 		properties: {
-// 			name: descriptors.name,
-// 			type: descriptors.type,
-// 			id: descriptors.name,
-// 			value: enteredValue,
-// 			label: descriptors.label,
-// 			onChange: updateValue,
-// 			onBlur: inputBlurHandler,
-// 		},
-// 		validities: {
-// 			isInvalid: valueIsInvalid,
-// 			isValid: valueIsValid,
-// 			reset: resetInput,
-// 			message: message,
-// 			raiseError,
-// 			setInitialValue,
-// 		},
-// 	};
-// };
 
 /**
  * The useFormHook
@@ -125,7 +63,9 @@ export interface UseFormReturnType {
  * @param descriptors.initial : Optional : The initial value of input field
  * @param ValidationFunction : The validation function for input field
  * @param updationFunction : Optional : The optional updation function
- * @returns FormObject : An object consisting of all the fields, checkValidty function, raiseError function and optional errorMessage
+ * @returns {UseFormReturnType} FormObject : An object consisting of all the fields, checkValidty function, raiseError function and optional errorMessage
+ *
+ * @author Balaguru S - https://github.com/Balaguru1601
  */
 const useFrom = (
 	FieldList: {
@@ -141,12 +81,8 @@ const useFrom = (
 		updationFunction?: (value: string | number) => void;
 	}[]
 ): UseFormReturnType => {
-	const formObject: UseFormReturnType = {
-		fields: {},
-		checkValidity: () => false,
-		resetForm: () => {},
-		raiseError: () => {},
-	};
+	const allFields: fieldType = {};
+
 	const formFieldsArray: {
 		properties: {
 			name: string;
@@ -166,7 +102,9 @@ const useFrom = (
 			setInitialValue: (val: string) => void;
 		};
 	}[] = [];
+
 	const [error, setError] = useState<string>();
+
 	for (const field of FieldList) {
 		const { descriptors, validationFunction, updationFunction } = field;
 		const [enteredValue, setEnteredValue] = useState(
@@ -206,7 +144,7 @@ const useFrom = (
 		};
 
 		const fieldName = descriptors.name;
-		formObject.fields[fieldName] = {
+		allFields[fieldName] = {
 			id,
 			properties: {
 				name: descriptors.name,
@@ -248,11 +186,6 @@ const useFrom = (
 		});
 	}
 
-	formObject.resetForm = () => {
-		for (const f of formFieldsArray) f.validities.reset();
-		setError("");
-	};
-
 	/**
 	 * The function to check form validity
 	 * @returns validity : boolean
@@ -277,9 +210,26 @@ const useFrom = (
 		}
 	};
 
-	formObject.checkValidity = checkFormValidity;
-	formObject.raiseError = raiseFormError;
-	formObject.errorMessage = error;
+	const getFormValues = () => {
+		const FormValuesObject: getValueType = {};
+		for (const f of formFieldsArray) {
+			FormValuesObject[f.properties.name] = f.properties.value;
+		}
+		return FormValuesObject;
+	};
+
+	const formObject: UseFormReturnType = {
+		fields: allFields,
+		checkValidity: checkFormValidity,
+		raiseError: raiseFormError,
+		errorMessage: error,
+		resetForm: () => {
+			for (const f of formFieldsArray) f.validities.reset();
+			setError("");
+		},
+		getValues: getFormValues,
+	};
+
 	return formObject;
 };
 

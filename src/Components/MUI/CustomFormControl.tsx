@@ -24,7 +24,6 @@ const CustomFormControl = (props: {
 	const { fields, submitHandler } = props;
 
 	const formFields = [];
-	const [error, setError] = useState<string>();
 	const [showPassword, setShowPassword] = useState(false);
 
 	const handleClickShowPassword = () => {
@@ -106,7 +105,14 @@ const CustomFormControl = (props: {
 	};
 
 	return (
-		<Container sx={{ p: 4, backgroundColor: "white" }}>
+		<Container
+			sx={{
+				p: 4,
+				backgroundColor: "white",
+				minWidth: 350,
+				borderRadius: 2,
+			}}
+		>
 			{...formFields}
 
 			<Typography color={"salmon"}>{fields.errorMessage}</Typography>
