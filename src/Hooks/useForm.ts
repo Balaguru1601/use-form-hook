@@ -3,10 +3,14 @@ import { ValidationFunctionType } from "../Utilities/FormValidationFunctions";
 
 export interface ParameterType {
 	descriptors: {
-		type: HTMLInputTypeAttribute;
+		type: HTMLInputTypeAttribute | "select";
 		name: string;
 		label: string;
 		initialValue?: string;
+		options?: {
+			display: string | number;
+			value: string | number;
+		}[];
 	};
 	validationFunction: ValidationFunctionType;
 	updationFunction?: (value: string | number) => void;
@@ -30,7 +34,7 @@ interface fieldType {
 			readonly onBlur: () => void;
 			readonly required: boolean;
 			readonly icon?:
-				| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
+				| keyof typeof import("../../node_modules/@mui/icons-material/index")
 				| null;
 		};
 		readonly validities: {
@@ -70,12 +74,16 @@ export interface UseFormReturnType {
 const useFrom = (
 	FieldList: {
 		descriptors: {
-			type: HTMLInputTypeAttribute;
+			type: HTMLInputTypeAttribute | "select";
 			name: string;
 			label: string;
 			initialValue?: string;
 			required: boolean;
-			icon?: keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index");
+			icon?: keyof typeof import("../../node_modules/@mui/icons-material/index");
+			options?: {
+				display: string | number;
+				value: string | number;
+			}[];
 		};
 		validationFunction: ValidationFunctionType;
 		updationFunction?: (value: string | number) => void;
@@ -92,6 +100,10 @@ const useFrom = (
 			onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 			onBlur: () => void;
 			required: boolean;
+			options?: {
+				display: string | number;
+				value: string | number;
+			}[];
 		};
 		validities: {
 			isInvalid: boolean;
@@ -104,88 +116,96 @@ const useFrom = (
 	}[] = [];
 
 	const [error, setError] = useState<string>();
+	const optionsList: {
+		display: string | number;
+		value: string | number;
+	}[] = [];
 
 	for (const field of FieldList) {
 		const { descriptors, validationFunction, updationFunction } = field;
-		const [enteredValue, setEnteredValue] = useState(
-			descriptors.initialValue || ""
-		);
-		const [inpWasTouched, setInpwasTouched] = useState(false);
-		const id = useId();
+		if (descriptors.type === "select") {
+		} else {
+			const [enteredValue, setEnteredValue] = useState(
+				descriptors.initialValue || ""
+			);
+			const [inpWasTouched, setInpwasTouched] = useState(false);
+			const id = useId();
 
-		const { validity: valueIsValid, message } =
-			validationFunction(enteredValue);
+			const { validity: valueIsValid, message } =
+				validationFunction(enteredValue);
 
-		const valueIsInvalid = descriptors.required
-			? inpWasTouched && !valueIsValid
-			: enteredValue.length > 0 && !valueIsValid;
+			const valueIsInvalid = descriptors.required
+				? inpWasTouched && !valueIsValid
+				: enteredValue.length > 0 && !valueIsValid;
 
-		const updateValue = (event: React.ChangeEvent<HTMLInputElement>) => {
-			if (updationFunction) updationFunction(event.target.value);
-			setEnteredValue((prevState) => event.target.value);
-		};
+			const updateValue = (
+				event: React.ChangeEvent<HTMLInputElement>
+			) => {
+				if (updationFunction) updationFunction(event.target.value);
+				setEnteredValue((prevState) => event.target.value);
+			};
 
-		const inputBlurHandler = () => {
-			setInpwasTouched((prevState) => true);
-		};
+			const inputBlurHandler = () => {
+				setInpwasTouched((prevState) => true);
+			};
 
-		const resetInput = () => {
-			setEnteredValue((prevState) => "");
-			setInpwasTouched((prevState) => false);
-		};
+			const resetInput = () => {
+				setEnteredValue((prevState) => "");
+				setInpwasTouched((prevState) => false);
+			};
 
-		const setInitialValue = (val: string) => {
-			setEnteredValue(val);
-		};
+			const setInitialValue = (val: string) => {
+				setEnteredValue(val);
+			};
 
-		const raiseError = () => {
-			setEnteredValue((prev) => "");
-			setInpwasTouched((prev) => true);
-		};
+			const raiseError = () => {
+				setEnteredValue((prev) => "");
+				setInpwasTouched((prev) => true);
+			};
 
-		const fieldName = descriptors.name;
-		allFields[fieldName] = {
-			id,
-			properties: {
-				name: descriptors.name,
-				type: descriptors.type,
-				value: enteredValue,
-				label: descriptors.label,
-				onChange: updateValue,
-				onBlur: inputBlurHandler,
-				required: descriptors.required,
-				icon: descriptors.icon || null,
-			},
-			validities: {
-				isInvalid: valueIsInvalid,
-				isValid: valueIsValid,
-				reset: resetInput,
-				message: message,
-				raiseError,
-				setInitialValue,
-			},
-		};
-		formFieldsArray.push({
-			properties: {
-				name: descriptors.name,
-				type: descriptors.type,
-				value: enteredValue,
-				label: descriptors.label,
-				onChange: updateValue,
-				onBlur: inputBlurHandler,
-				required: descriptors.required,
-			},
-			validities: {
-				isInvalid: valueIsInvalid,
-				isValid: valueIsValid,
-				reset: resetInput,
-				message: message,
-				raiseError,
-				setInitialValue,
-			},
-		});
+			const fieldName = descriptors.name;
+			allFields[fieldName] = {
+				id,
+				properties: {
+					name: descriptors.name,
+					type: descriptors.type,
+					value: enteredValue,
+					label: descriptors.label,
+					onChange: updateValue,
+					onBlur: inputBlurHandler,
+					required: descriptors.required,
+					icon: descriptors.icon || null,
+				},
+				validities: {
+					isInvalid: valueIsInvalid,
+					isValid: valueIsValid,
+					reset: resetInput,
+					message: message,
+					raiseError,
+					setInitialValue,
+				},
+			};
+			formFieldsArray.push({
+				properties: {
+					name: descriptors.name,
+					type: descriptors.type,
+					value: enteredValue,
+					label: descriptors.label,
+					onChange: updateValue,
+					onBlur: inputBlurHandler,
+					required: descriptors.required,
+				},
+				validities: {
+					isInvalid: valueIsInvalid,
+					isValid: valueIsValid,
+					reset: resetInput,
+					message: message,
+					raiseError,
+					setInitialValue,
+				},
+			});
+		}
 	}
-
 	/**
 	 * The function to check form validity
 	 * @returns validity : boolean
