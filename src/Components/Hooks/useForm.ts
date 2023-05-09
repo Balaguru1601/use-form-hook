@@ -105,11 +105,7 @@ const useFrom = (
 			type: HTMLInputTypeAttribute;
 			value: string;
 			label: string;
-			onChange: (
-				event:
-					| React.ChangeEvent<HTMLInputElement>
-					| SelectChangeEvent<string>
-			) => void;
+			onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 			onBlur: () => void;
 			required: boolean;
 			options?: {
@@ -154,11 +150,7 @@ const useFrom = (
 				optionsList.push(...descriptors.options);
 			}
 
-			const updationFn = (
-				event:
-					| React.ChangeEvent<HTMLInputElement>
-					| SelectChangeEvent<string>
-			) => {
+			const updationFn = (event: SelectChangeEvent<string>) => {
 				setEnteredValue(event.target.value as string);
 			};
 
@@ -235,9 +227,7 @@ const useFrom = (
 				: enteredValue.length > 0 && !valueIsValid;
 
 			const updateValue = (
-				event:
-					| React.ChangeEvent<HTMLInputElement>
-					| SelectChangeEvent<string>
+				event: React.ChangeEvent<HTMLInputElement>
 			) => {
 				if (updationFunction) updationFunction(event.target.value);
 				setEnteredValue((prevState) => event.target.value);
