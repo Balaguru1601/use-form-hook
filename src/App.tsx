@@ -6,7 +6,7 @@ import {
 	validateText,
 	validateUserName,
 } from "./Utilities/FormValidationFunctions";
-import useFrom, { UseFormReturnType } from "./Hooks/useForm";
+import useFrom, { UseFormReturnType } from "./Components/Hooks/useForm";
 import CustomFormControl from "./Components/MUI/CustomFormControl";
 import axios from "axios";
 import { Typography } from "@mui/material";

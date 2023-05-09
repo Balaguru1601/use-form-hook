@@ -12,7 +12,7 @@ import {
 	Button,
 	Typography,
 } from "@mui/material";
-import { UseFormReturnType } from "../../Hooks/useForm";
+import { UseFormReturnType } from "../Hooks/useForm";
 import { useState } from "react";
 
 const CustomFormControl = (props: {
@@ -37,7 +37,7 @@ const CustomFormControl = (props: {
 	for (const f in fields.fields) {
 		const field = fields.fields[f];
 		const icon:
-			| keyof typeof import("e:/React course/use-form-hook/node_modules/@mui/icons-material/index")
+			| keyof typeof import("../../../node_modules/@mui/icons-material/index")
 			| null =
 			field.properties.type === "password"
 				? showPassword

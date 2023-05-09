@@ -1,5 +1,6 @@
 import { HTMLInputTypeAttribute, useId, useState } from "react";
-import { ValidationFunctionType } from "../Utilities/FormValidationFunctions";
+import { ValidationFunctionType } from "../../Utilities/FormValidationFunctions";
+import { SelectChangeEvent } from "@mui/material";
 
 export interface ParameterType {
 	descriptors: {
@@ -10,6 +11,7 @@ export interface ParameterType {
 		options?: {
 			display: string | number;
 			value: string | number;
+			type: string;
 		}[];
 	};
 	validationFunction: ValidationFunctionType;
@@ -20,7 +22,7 @@ export interface getValueType {
 	[name: string]: string | number | boolean;
 }
 
-interface fieldType {
+export interface fieldType {
 	[fieldName: string]: {
 		readonly id: string;
 		readonly properties: {
@@ -29,13 +31,18 @@ interface fieldType {
 			value: string;
 			readonly label: string;
 			readonly onChange: (
-				event: React.ChangeEvent<HTMLInputElement>
+				event:
+					| React.ChangeEvent<HTMLInputElement>
+					| SelectChangeEvent<string>
 			) => void;
 			readonly onBlur: () => void;
 			readonly required: boolean;
-			readonly icon?:
-				| keyof typeof import("../../node_modules/@mui/icons-material/index")
-				| null;
+			readonly icon?: keyof typeof import("@mui/icons-material") | null;
+			readonly options?: {
+				display: string | number;
+				value: string | number;
+				type: string;
+			}[];
 		};
 		readonly validities: {
 			isInvalid: boolean;
@@ -79,10 +86,11 @@ const useFrom = (
 			label: string;
 			initialValue?: string;
 			required: boolean;
-			icon?: keyof typeof import("../../node_modules/@mui/icons-material/index");
+			icon?: keyof typeof import("@mui/icons-material");
 			options?: {
 				display: string | number;
 				value: string | number;
+				type: string;
 			}[];
 		};
 		validationFunction: ValidationFunctionType;
@@ -97,12 +105,17 @@ const useFrom = (
 			type: HTMLInputTypeAttribute;
 			value: string;
 			label: string;
-			onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+			onChange: (
+				event:
+					| React.ChangeEvent<HTMLInputElement>
+					| SelectChangeEvent<string>
+			) => void;
 			onBlur: () => void;
 			required: boolean;
 			options?: {
 				display: string | number;
 				value: string | number;
+				type: string;
 			}[];
 		};
 		validities: {
@@ -119,18 +132,101 @@ const useFrom = (
 	const optionsList: {
 		display: string | number;
 		value: string | number;
+		type: string;
 	}[] = [];
 
 	for (const field of FieldList) {
 		const { descriptors, validationFunction, updationFunction } = field;
+		const [enteredValue, setEnteredValue] = useState(
+			descriptors.initialValue || ""
+		);
+		const [inpWasTouched, setInpwasTouched] = useState(false);
+		const id = useId();
 		if (descriptors.type === "select") {
-		} else {
-			const [enteredValue, setEnteredValue] = useState(
-				descriptors.initialValue || ""
-			);
-			const [inpWasTouched, setInpwasTouched] = useState(false);
-			const id = useId();
+			if (descriptors.initialValue) {
+				optionsList.push({
+					type: "default",
+					value: descriptors.initialValue,
+					display: descriptors.initialValue,
+				});
+			}
+			if (descriptors.options?.length) {
+				optionsList.push(...descriptors.options);
+			}
 
+			const updationFn = (
+				event:
+					| React.ChangeEvent<HTMLInputElement>
+					| SelectChangeEvent<string>
+			) => {
+				setEnteredValue(event.target.value as string);
+			};
+
+			const valueIsValid = enteredValue.length > 0;
+
+			const valueIsInvalid = descriptors.required
+				? inpWasTouched && !valueIsValid
+				: enteredValue.length > 0 && !valueIsValid;
+			const inputBlurHandler = () => {
+				setInpwasTouched((prevState) => true);
+			};
+
+			const resetInput = () => {
+				setEnteredValue((prevState) => "");
+				setInpwasTouched((prevState) => false);
+			};
+
+			const setInitialValue = (val: string) => {
+				setEnteredValue(val);
+			};
+
+			const raiseError = () => {
+				setEnteredValue((prev) => "");
+				setInpwasTouched((prev) => true);
+			};
+			const fieldName = descriptors.name;
+			allFields[fieldName] = {
+				id,
+				properties: {
+					name: descriptors.name,
+					type: descriptors.type,
+					value: enteredValue,
+					label: descriptors.label,
+					onChange: updationFn,
+					onBlur: inputBlurHandler,
+					required: descriptors.required,
+					icon: descriptors.icon || null,
+					options: optionsList,
+				},
+				validities: {
+					isInvalid: valueIsInvalid,
+					isValid: valueIsValid,
+					reset: resetInput,
+					message: "Looks good!",
+					raiseError,
+					setInitialValue,
+				},
+			};
+			formFieldsArray.push({
+				properties: {
+					name: descriptors.name,
+					type: descriptors.type,
+					value: enteredValue,
+					label: descriptors.label,
+					onChange: updationFn,
+					onBlur: inputBlurHandler,
+					required: descriptors.required,
+				},
+				validities: {
+					isInvalid: valueIsInvalid,
+					isValid: valueIsValid,
+					reset: resetInput,
+					message: "Looks good!",
+					raiseError,
+					setInitialValue,
+				},
+			});
+		} else {
 			const { validity: valueIsValid, message } =
 				validationFunction(enteredValue);
 
@@ -139,7 +235,9 @@ const useFrom = (
 				: enteredValue.length > 0 && !valueIsValid;
 
 			const updateValue = (
-				event: React.ChangeEvent<HTMLInputElement>
+				event:
+					| React.ChangeEvent<HTMLInputElement>
+					| SelectChangeEvent<string>
 			) => {
 				if (updationFunction) updationFunction(event.target.value);
 				setEnteredValue((prevState) => event.target.value);
