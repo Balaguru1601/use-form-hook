@@ -56,6 +56,9 @@ const CustomFormControl = (props: {
 				  }
 				: { disabled: true };
 
+		if (field.properties.type === "select") {
+		}
+
 		formFields.push(
 			<FormControl
 				className={classes.formControl}
