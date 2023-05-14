@@ -2,17 +2,12 @@ import { HTMLInputTypeAttribute, useId, useState } from "react";
 import { ValidationFunctionType } from "../../Utilities/FormValidationFunctions";
 import { SelectChangeEvent } from "@mui/material";
 
-export interface ParameterType {
+export interface InputParameterType {
 	descriptors: {
 		type: HTMLInputTypeAttribute | "select";
 		name: string;
 		label: string;
 		initialValue?: string;
-		options?: {
-			display: string | number;
-			value: string | number;
-			type: string;
-		}[];
 	};
 	validationFunction: ValidationFunctionType;
 	updationFunction?: (value: string | number) => void;
@@ -22,7 +17,7 @@ export interface getValueType {
 	[name: string]: string | number | boolean;
 }
 
-export interface fieldType {
+export interface InputFieldType {
 	[fieldName: string]: {
 		readonly id: string;
 		readonly properties: {
@@ -31,9 +26,7 @@ export interface fieldType {
 			value: string;
 			readonly label: string;
 			readonly onChange: (
-				event:
-					| React.ChangeEvent<HTMLInputElement>
-					| SelectChangeEvent<string>
+				event: React.ChangeEvent<HTMLInputElement>
 			) => void;
 			readonly onBlur: () => void;
 			readonly required: boolean;
@@ -56,7 +49,7 @@ export interface fieldType {
 }
 
 export interface UseFormReturnType {
-	fields: fieldType;
+	fields: InputFieldType;
 	checkValidity: () => boolean;
 	raiseError: () => void;
 	errorMessage?: string;
@@ -97,7 +90,7 @@ const useFrom = (
 		updationFunction?: (value: string | number) => void;
 	}[]
 ): UseFormReturnType => {
-	const allFields: fieldType = {};
+	const allFields: InputFieldType = {};
 
 	const formFieldsArray: {
 		properties: {
@@ -105,7 +98,9 @@ const useFrom = (
 			type: HTMLInputTypeAttribute;
 			value: string;
 			label: string;
-			onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+			onChange: <T extends React.ChangeEvent<HTMLInputElement>>(
+				event: T
+			) => void;
 			onBlur: () => void;
 			required: boolean;
 			options?: {
