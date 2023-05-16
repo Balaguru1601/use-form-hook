@@ -7,7 +7,7 @@ import {
 	validateUserName,
 } from "./Utilities/FormValidationFunctions";
 import useFrom, { UseFormReturnType } from "./Components/Hooks/useForm";
-import CustomFormControl from "./Components/MUI/CustomFormControl";
+import CustomFormControl from "./Components/MUI/CustomForm";
 import axios from "axios";
 import { Typography } from "@mui/material";
 
@@ -23,7 +23,6 @@ function App() {
 				label: "Enter username",
 				type: "text",
 				required: true,
-				icon: "AccountCircle",
 			},
 			validationFunction: validateUserName,
 		},
@@ -42,7 +41,6 @@ function App() {
 				label: "Enter email",
 				type: "text",
 				required: true,
-				icon: "Email",
 			},
 			validationFunction: validateEmail,
 		},
@@ -55,13 +53,45 @@ function App() {
 			},
 			validationFunction: validateText,
 		},
+		{
+			descriptors: {
+				name: "select",
+				label: "Something...",
+				type: "select",
+				required: true,
+				options: [
+					{
+						display: "value 1",
+						value: "1",
+					},
+					{
+						display: "value 2",
+						value: "2",
+					},
+					{
+						display: "value 3",
+						value: "3",
+					},
+					{
+						display: "value 4",
+						value: "4",
+					},
+					{
+						display: "value 5",
+						value: "5",
+					},
+				],
+			},
+			validationFunction: validateText,
+		},
 	]);
 
 	const formSubmitHandler = async (f: UseFormReturnType) => {
 		// do the action for form submit
-		const response = await axios.post(serverUrl, f.getValues());
-		console.log(response.data);
+		// const response = await axios.post(serverUrl, f.getValues());
+		// console.log(response.data);
 		setResponse("Data sent successfully!");
+		setTimeout(() => setResponse(""), 2000);
 		f.resetForm();
 		return;
 	};

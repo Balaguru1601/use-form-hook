@@ -1,42 +1,26 @@
-import { FormControl, Select } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { HTMLInputTypeAttribute } from "react";
-interface fieldType {
-	readonly id: string;
-	readonly properties: {
-		readonly name: string;
-		readonly type: HTMLInputTypeAttribute;
-		value: string;
-		readonly label: string;
-		readonly onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-		readonly onBlur: () => void;
-		readonly required: boolean;
-		readonly icon?: keyof typeof import("@mui/icons-material") | null;
-		readonly options?: {
-			display: string | number;
-			value: string | number;
-			type: string;
-		}[];
-	};
-	readonly validities: {
-		isInvalid: boolean;
-		isValid: boolean;
-		readonly reset: () => void;
-		message: string;
-		readonly raiseError: () => void;
-		readonly setInitialValue: (val: string) => void;
-	};
-}
-const CustomSelectControl = (props: { field: fieldType }) => {
+import { SelectPropType } from "../Hooks/useForm";
+import classes from "./FormControl.module.css";
+
+const CustomSelectControl = (props: { field: SelectPropType }) => {
 	const { field } = props;
 	return (
-		<FormControl>
+		<FormControl className={classes.formControl}>
+			<InputLabel id={field.id}>{field.properties.label}</InputLabel>
 			<Select
-				labelId="demo-simple-select-label"
-				id="demo-simple-select"
+				id={field.id}
 				value={field.properties.value}
-				label="Age"
+				label={field.properties.label}
 				onChange={field.properties.onChange}
-			></Select>
+				fullWidth
+			>
+				{field.properties.options.map((item, index) => (
+					<MenuItem value={item.value} key={index}>
+						{item.display}
+					</MenuItem>
+				))}
+			</Select>
 		</FormControl>
 	);
 };

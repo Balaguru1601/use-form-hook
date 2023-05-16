@@ -1,55 +1,103 @@
 import { HTMLInputTypeAttribute, useId, useState } from "react";
-import { ValidationFunctionType } from "../../Utilities/FormValidationFunctions";
+import {
+	ValidationFunctionType,
+	validateText,
+} from "../../Utilities/FormValidationFunctions";
 import { SelectChangeEvent } from "@mui/material";
 
 export interface InputParameterType {
+	kind: "inbuilt";
 	descriptors: {
-		type: HTMLInputTypeAttribute | "select";
+		type: HTMLInputTypeAttribute;
 		name: string;
 		label: string;
 		initialValue?: string;
+		required: boolean;
 	};
-	validationFunction: ValidationFunctionType;
+	validationFunction?: ValidationFunctionType;
 	updationFunction?: (value: string | number) => void;
 }
+
+export interface option {
+	display: string | number;
+	value: string | number;
+	type?: string;
+}
+
+export interface SelectPropType {
+	readonly kind: "select";
+	readonly id: string;
+	readonly properties: {
+		readonly name: string;
+		readonly type: "select";
+		value: string;
+		readonly label: string;
+		readonly onChange: (event: SelectChangeEvent<string>) => void;
+		readonly onBlur: () => void;
+		readonly required: boolean;
+		readonly options: option[];
+	};
+	readonly validities: {
+		isInvalid: boolean;
+		isValid: boolean;
+		readonly reset: () => void;
+		message: string;
+		readonly raiseError: () => void;
+		readonly setInitialValue: (val: string) => void;
+	};
+}
+export interface InputPropType {
+	readonly kind: "inbuilt";
+	readonly id: string;
+	readonly properties: {
+		readonly name: string;
+		readonly type: HTMLInputTypeAttribute;
+		value: string;
+		readonly label: string;
+		readonly onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+		readonly onBlur: () => void;
+		readonly required: boolean;
+	};
+	readonly validities: {
+		isInvalid: boolean;
+		isValid: boolean;
+		readonly reset: () => void;
+		message: string;
+		readonly raiseError: () => void;
+		readonly setInitialValue: (val: string) => void;
+	};
+}
+
+export interface SelectParameterType {
+	kind: "select";
+	descriptors: {
+		type: "select";
+		name: string;
+		label: string;
+		initialValue?: string;
+		options: option[];
+		required: boolean;
+	};
+	validationFunction?: ValidationFunctionType;
+	updationFunction?: (value: string | number) => void;
+}
+
+type ParameterType = InputParameterType | SelectParameterType;
 
 export interface getValueType {
 	[name: string]: string | number | boolean;
 }
 
 export interface InputFieldType {
-	[fieldName: string]: {
-		readonly id: string;
-		readonly properties: {
-			readonly name: string;
-			readonly type: HTMLInputTypeAttribute;
-			value: string;
-			readonly label: string;
-			readonly onChange: (
-				event: React.ChangeEvent<HTMLInputElement>
-			) => void;
-			readonly onBlur: () => void;
-			readonly required: boolean;
-			readonly icon?: keyof typeof import("@mui/icons-material") | null;
-			readonly options?: {
-				display: string | number;
-				value: string | number;
-				type: string;
-			}[];
-		};
-		readonly validities: {
-			isInvalid: boolean;
-			isValid: boolean;
-			readonly reset: () => void;
-			message: string;
-			readonly raiseError: () => void;
-			readonly setInitialValue: (val: string) => void;
-		};
-	};
+	[fieldName: string]: InputPropType;
+}
+
+export interface SelectFieldType {
+	[fieldName: string]: SelectPropType;
 }
 
 export interface UseFormReturnType {
-	fields: InputFieldType;
+	fields: InputFieldType | SelectFieldType;
 	checkValidity: () => boolean;
 	raiseError: () => void;
 	errorMessage?: string;
@@ -57,6 +105,151 @@ export interface UseFormReturnType {
 	getValues: () => getValueType | void;
 }
 
+const useInput = (Field: ParameterType): SelectFieldType | InputFieldType => {
+	const id = useId();
+
+	if (Field.kind === "select") {
+		const {
+			descriptors,
+			updationFunction,
+			validationFunction = validateText,
+		} = Field;
+		const [enteredValue, setEnteredValue] = useState(
+			descriptors.initialValue || ""
+		);
+		const [inpWasTouched, setInpwasTouched] = useState(false);
+
+		const optionsList: {
+			display: string | number;
+			value: string | number;
+			type?: string;
+		}[] = [];
+		if (descriptors.initialValue) {
+			optionsList.push({
+				type: "default",
+				value: descriptors.initialValue,
+				display: descriptors.initialValue,
+			});
+		}
+		if (descriptors.options.length) {
+			optionsList.push(...descriptors.options);
+		}
+
+		const updationFn = (event: SelectChangeEvent<string>) => {
+			setEnteredValue(event.target.value as string);
+			updationFunction && updationFunction(event.target.value);
+		};
+
+		const { validity: valueIsValid, message } =
+			validationFunction(enteredValue);
+
+		const valueIsInvalid = descriptors.required
+			? inpWasTouched && !valueIsValid
+			: enteredValue.length > 0 && !valueIsValid;
+		const inputBlurHandler = () => {
+			setInpwasTouched((prevState) => true);
+		};
+
+		const resetInput = () => {
+			setEnteredValue((prevState) => "");
+			setInpwasTouched((prevState) => false);
+		};
+
+		const setInitialValue = (val: string) => {
+			setEnteredValue(val);
+		};
+
+		const raiseError = () => {
+			setEnteredValue((prev) => "");
+			setInpwasTouched((prev) => true);
+		};
+
+		return {
+			field: {
+				kind: "select",
+				id,
+				properties: {
+					name: descriptors.name,
+					type: descriptors.type,
+					value: enteredValue,
+					label: descriptors.label,
+					onChange: updationFn,
+					onBlur: inputBlurHandler,
+					required: descriptors.required,
+					options: optionsList,
+				},
+				validities: {
+					isInvalid: valueIsInvalid,
+					isValid: valueIsValid,
+					reset: resetInput,
+					message: message,
+					raiseError,
+					setInitialValue,
+				},
+			},
+		};
+	}
+	const {
+		descriptors,
+		validationFunction = validateText,
+		updationFunction,
+	} = Field;
+	const [enteredValue, setEnteredValue] = useState(
+		descriptors.initialValue || ""
+	);
+	const [inpWasTouched, setInpwasTouched] = useState(false);
+
+	const updationFn = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setEnteredValue(event.target.value as string);
+	};
+
+	const { validity: valueIsValid, message } =
+		validationFunction(enteredValue);
+
+	const valueIsInvalid = descriptors.required
+		? inpWasTouched && !valueIsValid
+		: enteredValue.length > 0 && !valueIsValid;
+	const inputBlurHandler = () => {
+		setInpwasTouched((prevState) => true);
+	};
+
+	const resetInput = () => {
+		setEnteredValue((prevState) => "");
+		setInpwasTouched((prevState) => false);
+	};
+
+	const setInitialValue = (val: string) => {
+		setEnteredValue(val);
+	};
+
+	const raiseError = () => {
+		setEnteredValue((prev) => "");
+		setInpwasTouched((prev) => true);
+	};
+	return {
+		field: {
+			kind: "inbuilt",
+			id,
+			properties: {
+				name: descriptors.name,
+				type: descriptors.type,
+				value: enteredValue,
+				label: descriptors.label,
+				onChange: updationFn,
+				onBlur: inputBlurHandler,
+				required: descriptors.required,
+			},
+			validities: {
+				isInvalid: valueIsInvalid,
+				isValid: valueIsValid,
+				reset: resetInput,
+				message: message,
+				raiseError,
+				setInitialValue,
+			},
+		},
+	};
+};
 /**
  * The useFormHook
  *
@@ -79,214 +272,38 @@ const useFrom = (
 			label: string;
 			initialValue?: string;
 			required: boolean;
-			icon?: keyof typeof import("@mui/icons-material");
-			options?: {
-				display: string | number;
-				value: string | number;
-				type: string;
-			}[];
+			options?: option[];
 		};
 		validationFunction: ValidationFunctionType;
 		updationFunction?: (value: string | number) => void;
 	}[]
 ): UseFormReturnType => {
-	const allFields: InputFieldType = {};
+	const allFields: InputFieldType | SelectFieldType = {};
 
-	const formFieldsArray: {
-		properties: {
-			name: string;
-			type: HTMLInputTypeAttribute;
-			value: string;
-			label: string;
-			onChange: <T extends React.ChangeEvent<HTMLInputElement>>(
-				event: T
-			) => void;
-			onBlur: () => void;
-			required: boolean;
-			options?: {
-				display: string | number;
-				value: string | number;
-				type: string;
-			}[];
-		};
-		validities: {
-			isInvalid: boolean;
-			isValid: boolean;
-			reset: () => void;
-			message: string;
-			raiseError: () => void;
-			setInitialValue: (val: string) => void;
-		};
-	}[] = [];
+	const formFieldsArray: (SelectPropType | InputPropType)[] = [];
 
 	const [error, setError] = useState<string>();
-	const optionsList: {
-		display: string | number;
-		value: string | number;
-		type: string;
-	}[] = [];
 
 	for (const field of FieldList) {
-		const { descriptors, validationFunction, updationFunction } = field;
-		const [enteredValue, setEnteredValue] = useState(
-			descriptors.initialValue || ""
-		);
-		const [inpWasTouched, setInpwasTouched] = useState(false);
-		const id = useId();
-		if (descriptors.type === "select") {
-			if (descriptors.initialValue) {
-				optionsList.push({
-					type: "default",
-					value: descriptors.initialValue,
-					display: descriptors.initialValue,
-				});
-			}
-			if (descriptors.options?.length) {
-				optionsList.push(...descriptors.options);
-			}
-
-			const updationFn = (event: SelectChangeEvent<string>) => {
-				setEnteredValue(event.target.value as string);
-			};
-
-			const valueIsValid = enteredValue.length > 0;
-
-			const valueIsInvalid = descriptors.required
-				? inpWasTouched && !valueIsValid
-				: enteredValue.length > 0 && !valueIsValid;
-			const inputBlurHandler = () => {
-				setInpwasTouched((prevState) => true);
-			};
-
-			const resetInput = () => {
-				setEnteredValue((prevState) => "");
-				setInpwasTouched((prevState) => false);
-			};
-
-			const setInitialValue = (val: string) => {
-				setEnteredValue(val);
-			};
-
-			const raiseError = () => {
-				setEnteredValue((prev) => "");
-				setInpwasTouched((prev) => true);
-			};
-			const fieldName = descriptors.name;
-			allFields[fieldName] = {
-				id,
-				properties: {
-					name: descriptors.name,
-					type: descriptors.type,
-					value: enteredValue,
-					label: descriptors.label,
-					onChange: updationFn,
-					onBlur: inputBlurHandler,
-					required: descriptors.required,
-					icon: descriptors.icon || null,
-					options: optionsList,
+		if (field.descriptors.type === "select" && field.descriptors.options) {
+			const returnedField = useInput({
+				kind: "select",
+				...field,
+				descriptors: {
+					...field.descriptors,
+					type: "select",
+					options: field.descriptors.options,
 				},
-				validities: {
-					isInvalid: valueIsInvalid,
-					isValid: valueIsValid,
-					reset: resetInput,
-					message: "Looks good!",
-					raiseError,
-					setInitialValue,
-				},
-			};
-			formFieldsArray.push({
-				properties: {
-					name: descriptors.name,
-					type: descriptors.type,
-					value: enteredValue,
-					label: descriptors.label,
-					onChange: updationFn,
-					onBlur: inputBlurHandler,
-					required: descriptors.required,
-				},
-				validities: {
-					isInvalid: valueIsInvalid,
-					isValid: valueIsValid,
-					reset: resetInput,
-					message: "Looks good!",
-					raiseError,
-					setInitialValue,
-				},
-			});
+			}).field;
+			allFields[field.descriptors.name] = returnedField;
+			formFieldsArray.push(returnedField);
 		} else {
-			const { validity: valueIsValid, message } =
-				validationFunction(enteredValue);
-
-			const valueIsInvalid = descriptors.required
-				? inpWasTouched && !valueIsValid
-				: enteredValue.length > 0 && !valueIsValid;
-
-			const updateValue = (
-				event: React.ChangeEvent<HTMLInputElement>
-			) => {
-				if (updationFunction) updationFunction(event.target.value);
-				setEnteredValue((prevState) => event.target.value);
-			};
-
-			const inputBlurHandler = () => {
-				setInpwasTouched((prevState) => true);
-			};
-
-			const resetInput = () => {
-				setEnteredValue((prevState) => "");
-				setInpwasTouched((prevState) => false);
-			};
-
-			const setInitialValue = (val: string) => {
-				setEnteredValue(val);
-			};
-
-			const raiseError = () => {
-				setEnteredValue((prev) => "");
-				setInpwasTouched((prev) => true);
-			};
-
-			const fieldName = descriptors.name;
-			allFields[fieldName] = {
-				id,
-				properties: {
-					name: descriptors.name,
-					type: descriptors.type,
-					value: enteredValue,
-					label: descriptors.label,
-					onChange: updateValue,
-					onBlur: inputBlurHandler,
-					required: descriptors.required,
-					icon: descriptors.icon || null,
-				},
-				validities: {
-					isInvalid: valueIsInvalid,
-					isValid: valueIsValid,
-					reset: resetInput,
-					message: message,
-					raiseError,
-					setInitialValue,
-				},
-			};
-			formFieldsArray.push({
-				properties: {
-					name: descriptors.name,
-					type: descriptors.type,
-					value: enteredValue,
-					label: descriptors.label,
-					onChange: updateValue,
-					onBlur: inputBlurHandler,
-					required: descriptors.required,
-				},
-				validities: {
-					isInvalid: valueIsInvalid,
-					isValid: valueIsValid,
-					reset: resetInput,
-					message: message,
-					raiseError,
-					setInitialValue,
-				},
-			});
+			const returnedField = useInput({
+				kind: "inbuilt",
+				...field,
+			}).field;
+			allFields[field.descriptors.name] = returnedField;
+			formFieldsArray.push(returnedField);
 		}
 	}
 	/**

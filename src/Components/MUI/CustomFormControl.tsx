@@ -1,29 +1,22 @@
-import * as Icon from "@mui/icons-material";
-import classes from "./FormControl.module.css";
 import {
-	InputLabel,
-	OutlinedInput,
-	InputAdornment,
-	IconButton,
 	FormControl,
 	FormHelperText,
+	IconButton,
 	IconButtonProps,
-	Container,
-	Button,
-	Typography,
+	InputAdornment,
+	InputLabel,
+	OutlinedInput,
 } from "@mui/material";
-import { UseFormReturnType } from "../Hooks/useForm";
+import { InputFieldType, InputPropType } from "../Hooks/useForm";
+import * as Icon from "@mui/icons-material";
+import classes from "./FormControl.module.css";
 import { useState } from "react";
 
 const CustomFormControl = (props: {
-	fields: UseFormReturnType;
-	submitHandler: (f: UseFormReturnType) => void;
-	// IconBtnProps?: FC<IconButtonProps>;
-	// type?: HTMLInputTypeAttribute;
+	field: InputPropType;
+	icon?: keyof typeof import("@mui/icons-material/index") | null;
 }) => {
-	const { fields, submitHandler } = props;
-
-	const formFields = [];
+	const { field } = props;
 	const [showPassword, setShowPassword] = useState(false);
 
 	const handleClickShowPassword = () => {
@@ -34,95 +27,60 @@ const CustomFormControl = (props: {
 		event: React.MouseEvent<HTMLButtonElement>
 	) => event.preventDefault();
 
-	for (const f in fields.fields) {
-		const field = fields.fields[f];
-		const icon:
-			| keyof typeof import("../../../node_modules/@mui/icons-material/index")
-			| null =
-			field.properties.type === "password"
-				? showPassword
-					? "VisibilityOff"
-					: "Visibility"
-				: fields.fields[f].properties.icon || null;
-		const InputIcon =
-			(icon || field.properties.type === "password") && Icon[icon!];
+	const icon: keyof typeof import("@mui/icons-material/index") | null =
+		field.properties.type === "password"
+			? showPassword
+				? "VisibilityOff"
+				: "Visibility"
+			: props.icon || null;
 
-		const IconBtnProps: IconButtonProps =
-			field.properties.type === "password"
-				? {
-						onClick: handleClickShowPassword,
-						onMouseDown: handleMouseDownPassword,
-						disabled: field.properties.value.length === 0,
-				  }
-				: { disabled: true };
+	const InputIcon =
+		(icon || field.properties.type === "password") && Icon[icon!];
 
-		if (field.properties.type === "select") {
-		}
-
-		formFields.push(
-			<FormControl
-				className={classes.formControl}
-				error={field.validities.isInvalid}
-				color={field.validities.isValid ? "success" : "primary"}
-				key={field.id}
-			>
-				<InputLabel htmlFor={field.id}>
-					{field.properties.label}
-				</InputLabel>
-				<OutlinedInput
-					sx={{ marginRight: "1rem", width: "100%" }}
-					{...field.properties}
-					id={field.id}
-					endAdornment={
-						icon && (
-							<InputAdornment position="end">
-								<IconButton {...IconBtnProps}>
-									{InputIcon && <InputIcon />}
-								</IconButton>
-							</InputAdornment>
-						)
-					}
-					type={
-						field.properties.type === "password"
-							? showPassword
-								? "text"
-								: "password"
-							: field.properties.type
-					}
-				/>
-				{field.validities.isInvalid && (
-					<FormHelperText id="component-error-text">
-						{field.validities.message}
-					</FormHelperText>
-				)}
-			</FormControl>
-		);
-	}
-
-	const formSubmitHandler = () => {
-		if (!fields.checkValidity()) {
-			fields.raiseError();
-		} else {
-			submitHandler(fields);
-		}
-	};
+	const IconBtnProps: IconButtonProps =
+		field.properties.type === "password"
+			? {
+					onClick: handleClickShowPassword,
+					onMouseDown: handleMouseDownPassword,
+					disabled: field.properties.value.length === 0,
+			  }
+			: { disabled: true };
 
 	return (
-		<Container
-			sx={{
-				p: 4,
-				backgroundColor: "white",
-				minWidth: 350,
-				borderRadius: 2,
-			}}
+		<FormControl
+			className={classes.formControl}
+			error={field.validities.isInvalid}
+			color={field.validities.isValid ? "success" : "primary"}
+			key={field.id}
 		>
-			{...formFields}
-
-			<Typography color={"salmon"}>{fields.errorMessage}</Typography>
-
-			<Button onClick={formSubmitHandler}>Submit</Button>
-			<Button onClick={fields.resetForm}>Reset</Button>
-		</Container>
+			<InputLabel htmlFor={field.id}>{field.properties.label}</InputLabel>
+			<OutlinedInput
+				sx={{ marginRight: "1rem", width: "100%" }}
+				{...field.properties}
+				id={field.id}
+				endAdornment={
+					icon && (
+						<InputAdornment position="end">
+							<IconButton {...IconBtnProps}>
+								{InputIcon && <InputIcon />}
+							</IconButton>
+						</InputAdornment>
+					)
+				}
+				type={
+					field.properties.type === "password"
+						? showPassword
+							? "text"
+							: "password"
+						: field.properties.type
+				}
+			/>
+			{field.validities.isInvalid && (
+				<FormHelperText id="component-error-text">
+					{field.validities.message}
+				</FormHelperText>
+			)}
+		</FormControl>
 	);
 };
 
