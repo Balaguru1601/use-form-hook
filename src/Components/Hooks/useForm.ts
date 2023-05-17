@@ -146,6 +146,7 @@ const useInput = (Field: ParameterType): SelectFieldType | InputFieldType => {
 		const valueIsInvalid = descriptors.required
 			? inpWasTouched && !valueIsValid
 			: enteredValue.length > 0 && !valueIsValid;
+
 		const inputBlurHandler = () => {
 			setInpwasTouched((prevState) => true);
 		};
